@@ -2,11 +2,12 @@ package com.tuple.inventory.controller
 
 import com.tuple.inventory.model.Supply
 import com.tuple.inventory.service.SupplyService
+import kotlinx.coroutines.runBlocking
 import org.springframework.data.domain.Page
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/supply")
 class SupplyController(private val supplyService: SupplyService) {
@@ -30,7 +31,7 @@ class SupplyController(private val supplyService: SupplyService) {
     }
 
     @PostMapping("/")
-    fun createSupply(@RequestBody supply: Supply):ResponseEntity<Supply>{
+    suspend fun createSupply(@RequestBody supply: Supply):ResponseEntity<Supply> {
         return ResponseEntity(supplyService.createSupply(supply),HttpStatus.CREATED)
     }
     @DeleteMapping("/{supplyId}")

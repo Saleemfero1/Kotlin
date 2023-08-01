@@ -67,30 +67,14 @@ class DemandService(private val demandRepository: DemandRepository) {
 
     suspend fun getTotalDemandByItemIdAndLocationId(itemId:String,locationId: String):Int{
         val demandList:List<Demand> = findDemandByItemIdAndLocationId(itemId,locationId)
-        var totalDemand:Int = 0
-        if (demandList.isEmpty())
-            return 0
-        else{
-            for (demand in demandList){
-                if(demand.demandType== DemandType.HARDPROMISED)
-                    totalDemand+=demand.quantity
-            }
-        }
-        return totalDemand
+        return demandList.filter { it.demandType == DemandType.HARDPROMISED }.sumOf { it.quantity }
+
     }
+
 
     suspend fun getTotalDemandOfItemAtAllLocation(itemId:String):Int{
         val demandList:List<Demand> = findDemandAtAllLocation(itemId)
-        var totalDemand:Int = 0
-        if (demandList.isEmpty())
-            return 0
-        else{
-            for (demand in demandList){
-                if(demand.demandType==DemandType.HARDPROMISED)
-                    totalDemand+=demand.quantity
-            }
-        }
-        return totalDemand
+        return demandList.filter { it.demandType == DemandType.HARDPROMISED }.sumOf { it.quantity }
     }
 
 }

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 @Service
@@ -24,7 +25,8 @@ class TransactionService(private val transactionRepository: TransactionRepositor
         return transactionRepository.findById(transactionId).get()
     }
 
-    fun createTransaction(transaction: Transaction):Transaction{
+
+    suspend fun createTransaction(transaction: Transaction):Transaction{
         transaction.transactionId = Generators.timeBasedGenerator().generate().toString()
         return transactionRepository.save(transaction)
     }

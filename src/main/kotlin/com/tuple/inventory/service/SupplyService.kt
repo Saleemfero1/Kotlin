@@ -7,6 +7,9 @@ import com.tuple.inventory.exception.ThresholdNotFoundException
 import com.tuple.inventory.model.Supply
 import com.tuple.inventory.model.Transaction
 import com.tuple.inventory.repository.SupplyRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -31,16 +34,21 @@ class SupplyService(private val supplyRepository: SupplyRepository,
             throw SupplyNotFoundException("Supply Not Found with supplyId :$supplyId")
         return existSupply.get()
     }
-    fun  createSupply(supply: Supply):Supply{
-        supply.supplyId =Generators.timeBasedGenerator().generate().toString()
-        if(!(thresholdService.isThresholdExistByItemAndLocation(supply.itemId,supply.locationId)))
-            throw ThresholdNotFoundException("Threshold not found for item and location")
-        val transaction = Transaction(null,supply.itemId,supply.locationId,"Supply + ${supply.supplyType}",supply.quantity,
-            LocalDateTime.now())
-        transactionService.createTransaction(transaction)
-        return supplyRepository.save(supply)
+     suspend fun  createSupply(supply: Supply):Supply = coroutineScope {
+         supply.supplyId = Generators.timeBasedGenerator().generate().toString()
 
-    }
+         if (!(thresholdService.isThresholdExistByItemAndLocation(supply.itemId, supply.locationId)))
+             throw ThresholdNotFoundException("Threshold not found for item and location")
+
+         val transactionCreated = async { transactionService.createTransaction( Transaction(
+                 null, supply.itemId, supply.locationId, "Supply + ${supply.supplyType}", supply.quantity,
+             LocalDateTime.now()
+         )) }
+
+         val supplyCreated = async { supplyRepository.save(supply) }
+         val getTransaction = transactionCreated.await()
+         return@coroutineScope supplyCreated.await()
+     }
 
     fun deleteSupply(supplyId: String):String{
         val existSupply = supplyId.let { supplyRepository.existsById(supplyId)}
@@ -77,28 +85,36 @@ class SupplyService(private val supplyRepository: SupplyRepository,
 
     suspend  fun getTotalSupplyByItemIdAndLocationId(itemId:String,locationId: String):Int{
         val supplyList:List<Supply> = findSupplyByItemIdAndLocationId(itemId,locationId)
-        var totalSupply:Int = 0
-        if (supplyList.isEmpty())
-             return totalSupply
-        else{
-            for (supply in supplyList){
-                if(supply.supplyType== SupplyType.ONHAND)
-                    totalSupply+=supply.quantity
-            }
-        }
-        return totalSupply
+        return supplyList.filter { it.supplyType == SupplyType.ONHAND }.sumOf { it.quantity }
     }
     suspend fun getTotalSupplyOfItemAtAllLocation(itemId:String):Int{
         val supplyList:List<Supply> = findSupplyAtAllLocation(itemId)
+        return supplyList.filter { it.supplyType == SupplyType.ONHAND }.sumOf { it.quantity }
+    }
+
+
+    //this is for example
+    suspend fun TaskOne():Int{
+        delay(1000)
+        println("This is Task One")
+        return 10
+    }
+    suspend fun TaskTwo():Int{
+        println("This is Task Two")
+        return 10
+    }
+
+}
+
+
+/*
+   suspend fun getTotalSupplyOfItemAtAllLocation(itemId:String):Int{
+        val supplyList:List<Supply> = findSupplyAtAllLocation(itemId)
         var totalSupply:Int = 0
-        if (supplyList.isEmpty())
-            return 0
-        else{
             for (supply in supplyList){
                 if(supply.supplyType==SupplyType.ONHAND)
                     totalSupply+=supply.quantity
             }
-        }
         return totalSupply
     }
-}
+* */

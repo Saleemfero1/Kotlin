@@ -16,7 +16,9 @@ java {
 
 repositories {
 	mavenCentral()
+
 }
+
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
@@ -28,6 +30,12 @@ dependencies {
 	implementation(	"org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
 	implementation("org.reactivestreams:reactive-streams:1.0.3")
 	implementation("com.fasterxml.uuid:java-uuid-generator:4.0.1")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+//	implementation( "org.springframework.boot:spring-boot-starter-security")
+//	implementation("javax.xml.bind:jaxb-api:2.3.0")
+//	implementation("javax.xml.bind:jaxb-api:2.3.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+	implementation("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
